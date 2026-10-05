@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Simulador didactico e interactivo de Backpropagation en un Perceptron Multicapa: recorrido paso a paso por forward pass, calculo de error, retropropagacion y actualizacion de pesos.">
+<meta name="theme-color" content="#070d17">
+<title>Simulador de Backpropagation · Perceptron Multicapa</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.9.0/dist/driver.css">
+
+<link rel="stylesheet" href="./app.css">
+</head>
+
+<body class="aurora min-h-screen font-sans antialiased">
+<div class="aurora-grid" aria-hidden="true"></div>
+
+<!-- ══════════════════════════ HEADER ══════════════════════════ -->
+<header class="sticky top-0 z-40 border-b border-slate-700/40 bg-abyss-900/80 backdrop-blur-xl">
+  <div class="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-4 px-4 py-3">
+
+    <div class="flex items-center gap-3">
+      <div class="relative grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-cyan-glow-600 to-cyan-glow-400 shadow-lg shadow-cyan-glow-700/40">
+        <svg viewBox="0 0 24 24" class="h-6 w-6 text-abyss-950" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="5" cy="6"  r="2.1"/><circle cx="5" cy="18" r="2.1"/>
+          <circle cx="12" cy="12" r="2.4"/>
+          <circle cx="19" cy="6"  r="2.1"/><circle cx="19" cy="18" r="2.1"/>
+          <path d="M6.9 7.1 10 10.9M6.9 16.9 10 13.1M14 10.9 17.1 7.1M14 13.1l3.1 3.8"/>
+        </svg>
+        <span class="absolute -inset-1 -z-10 rounded-xl bg-cyan-glow-500/25 blur-md" aria-hidden="true"></span>
+      </div>
+
+      <div>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="rounded-md border border-cyan-glow-500/30 bg-cyan-glow-900/50 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-cyan-glow-300 uppercase">
+            Curso de Inteligencia Artificial
+          </span>
+          <span class="text-[10px] text-slate-500">Nivel universitario</span>
+        </div>
+        <h1 class="mt-0.5 text-lg leading-tight font-bold tracking-tight text-white">
+          Simulador de <span class="text-cyan-glow-400">Backpropagation</span> en Perceptron Multicapa
+        </h1>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <div id="mode-indicator" class="flex items-center gap-2 rounded-lg border border-slate-700/60 bg-abyss-800/70 px-3 py-1.5 text-[11px] font-medium text-slate-300">
+        <span id="mode-dot" class="relative inline-block h-2 w-2 rounded-full bg-cyan-glow-400"></span>
+        <span id="mode-label">Listo</span>
+      </div>
+
+      <button id="btn-tour" class="btn btn-ghost" type="button"
+              data-tip="data"
+              data-tip-title="Recorrido guiado"
+              data-tip-body="Recorre los 7 pasos del algoritmo con explicaciones. Atajo: tecla T.">
+        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.1 9.2a3 3 0 1 1 4.2 2.75c-.8.45-1.3 1.1-1.3 2.05M12 17.2h.01"/></svg>
+        Tour
+      </button>
+
+      <button id="btn-help" class="btn btn-cyan" type="button"
+              data-tip="data"
+              data-tip-title="Guia rapida"
+              data-tip-body="Instrucciones de uso, atajos de teclado y descripcion de cada parametro.">
+        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9.1 9.2a3 3 0 1 1 4.2 2.75c-.8.45-1.3 1.1-1.3 2.05M12 17.2h.01"/><circle cx="12" cy="12" r="9"/></svg>
+        Guia rapida
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════ CONTROL BAR ══════════════════════════ -->
+<section class="sticky top-[73px] z-30 border-b border-slate-700/40 bg-abyss-850/70 backdrop-blur-xl">
+  <div class="mx-auto flex max-w-[1600px] flex-wrap items-end justify-between gap-x-6 gap-y-4 px-4 py-3">
+
+    <div class="flex flex-wrap items-end gap-x-4 gap-y-3">
+      <div class="w-52" data-tip="data" data-tip-title="Ejemplo didactico"
+           data-tip-body="Determina el dataset, la arquitectura de la red y los pesos iniciales. Cambiarlo reinicia el entrenamiento.">
+        <label for="preset-select" class="mb-1 block text-[10px] font-semibold tracking-wide text-slate-400 uppercase">Ejemplo didactico</label>
+        <select id="preset-select" class="field font-medium">
+          <option value="simple">1. Numerico estandar (2-2-2)</option>
+          <option value="xor">2. Logica XOR (2-2-1, 4 patrones)</option>
+          <option value="custom">3. Configuracion personalizada</option>
+        </select>
+      </div>
+
+      <div class="w-56" data-tip="data" data-tip-title="Funcion de activacion"
+           data-tip-body="Sigma(z) y su derivada sigma'(z) determinan la no linealidad. Sigmoid y tanh son suaves; ReLU es la mas usada en redes profundas. Es obligatoria la derivada para poder retropropagar.">
+        <label for="activation-select" class="mb-1 block text-[10px] font-semibold tracking-wide text-slate-400 uppercase">Activacion</label>
+        <select id="activation-select" class="field font-medium">
+          <option value="sigmoid">Sigmoide</option>
+          <option value="tanh">Tangente hiperbolica</option>
+          <option value="relu">ReLU</option>
+        </select>
+      </div>
+
+      <div class="w-52" data-tip="data" data-tip-title="Tasa de aprendizaje (eta)"
+           data-tip-body="Es el tamano del paso del descenso de gradiente. Valores muy altos oscilan y divergen; valores muy bajos ralentizan el aprendizaje. El rango util para esta red suele estar entre 0.05 y 0.9.">
+        <label for="lr-slider" class="mb-1 block text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
+          Tasa de aprendizaje <span class="font-mono text-cyan-glow-400">eta</span>
+        </label>
+        <div class="flex items-center gap-2">
+          <input id="lr-slider" type="range" min="0.01" max="1.0" step="0.01" value="0.5" class="w-full">
+          <span id="lr-val" class="tnum w-14 shrink-0 rounded-md border border-slate-700/60 bg-abyss-950/80 px-1.5 py-1 text-center text-[11px] font-bold text-cyan-glow-300">0.50</span>
+        </div>
+      </div>
+
+      <div id="pattern-wrap" hidden class="w-52"
+           data-tip="data" data-tip-title="Patron de entrenamiento"
+           data-tip-body="XOR consta de 4 combinaciones. Cada patron se entrena en una epoca distinta para que la red aprenda la funcion completa, no un unico caso.">
+        <label for="pattern-select" class="mb-1 block text-[10px] font-semibold tracking-wide text-slate-400 uppercase">Patron (XOR)</label>
+        <select id="pattern-select" class="field font-medium"></select>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <button id="btn-prev" class="btn btn-ghost" type="button"
+              data-tip="data" data-tip-title="Paso anterior"
+              data-tip-body="Retrocede un paso en el desglose matematico. Atajo: flecha izquierda.">
+        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 5v14L8 12zM6 5v14" transform="translate(1 -1)"/></svg>
+        Anterior
+      </button>
+
+      <button id="btn-next" class="btn btn-cyan" type="button"
+              data-tip="data" data-tip-title="Siguiente paso"
+              data-tip-body="Avanza el calculo paso a paso: forward, error, backprop y actualizacion. Al llegar al final se aplica el descenso de gradiente y empieza la epoca siguiente. Atajo: flecha derecha o espacio.">
+        Siguiente paso
+        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 4 10 8-10 8zM19 4v16" transform="translate(-1 0)"/></svg>
+      </button>
+
+      <button id="btn-epoch" class="btn btn-ember" type="button"
+              data-tip="data" data-tip-title="Epoca completa"
+              data-tip-body="Ejecuta de golpe forward, error, backprop y actualizacion, y registra un punto en la curva de perdida. Utiles para observar la convergencia.">
+        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13z"/></svg>
+        Epoca completa
+      </button>
+
+      <button id="btn-auto" class="btn btn-ember" type="button"
+              data-tip="data" data-tip-title="Auto-entrenar"
+              data-tip-body="Encadena epocas automaticamente hasta alcanzar una perdida minima o el limite de 500. Se detiene solo cuando el modelo converge. Atajo: espacio.">
+        <svg id="auto-icon" viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>
+        <span id="auto-text">Auto-entrenar</span>
+      </button>
+
+      <button id="btn-reset" class="btn btn-ghost" type="button"
+              data-tip="data" data-tip-title="Reiniciar"
+              data-tip-body="Restaura los pesos, sesgos, contador de epocas e historial de perdida del ejemplo seleccionado. Atajo: R.">
+        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4M3 4v5h5"/></svg>
+        Reiniciar
+      </button>
+    </div>
+  </div>
+
+  <!-- Stepper de fases -->
+  <div class="border-t border-slate-700/30">
+    <div class="mx-auto max-w-[1600px] overflow-x-auto px-4 py-2">
+      <ol id="phase-stepper" class="flex min-w-max items-center gap-1.5"></ol>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ MAIN ══════════════════════════ -->
+<main class="mx-auto grid w-full max-w-[1600px] flex-grow grid-cols-1 gap-4 px-4 py-4 xl:grid-cols-12">
+
+  <!-- ─────────── COLUMNA IZQUIERDA ─────────── -->
+  <section class="flex flex-col gap-4 xl:col-span-7">
+
+    <!-- HUD de metricas -->
+    <div class="glass edge-glow grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-slate-700/20 sm:grid-cols-4">
+      <div class="bg-abyss-850/60 p-3">
+        <div class="flex items-center gap-1.5 text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
+          <span class="h-1.5 w-1.5 rounded-full bg-ember-400"></span> Perdida total
+        </div>
+        <div class="tnum mt-1 text-xl font-bold text-ember-300" id="hud-loss">0.00000</div>
+        <div class="meter mt-1.5"><span id="hud-loss-meter" style="width:100%;background:linear-gradient(90deg,#fb923c,#f97316)"></span></div>
+      </div>
+
+      <div class="bg-abyss-850/60 p-3">
+        <div class="flex items-center gap-1.5 text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
+          <span class="h-1.5 w-1.5 rounded-full bg-cyan-glow-400"></span> Delta por epoca
+        </div>
+        <div class="tnum mt-1 text-xl font-bold text-cyan-glow-300" id="hud-delta">—</div>
+        <div class="mt-1.5 text-[10px] text-slate-500" id="hud-delta-note">sin_epochs</div>
+      </div>
+
+      <div class="bg-abyss-850/60 p-3">
+        <div class="flex items-center gap-1.5 text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
+          <span class="h-1.5 w-1.5 rounded-full bg-cyan-glow-300"></span> Norma de deltas
+        </div>
+        <div class="tnum mt-1 text-xl font-bold text-cyan-glow-300" id="hud-deltanorm">0.00000</div>
+        <div class="meter mt-1.5"><span id="hud-deltanorm-meter" style="width:0%;background:linear-gradient(90deg,#0891b2,#22d3ee)"></span></div>
+      </div>
+
+      <div class="bg-abyss-850/60 p-3">
+        <div class="flex items-center gap-1.5 text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
+          <span class="h-1.5 w-1.5 rounded-full bg-ember-300"></span> Epocas
+        </div>
+        <div class="tnum mt-1 text-xl font-bold text-white" id="hud-epoch">0</div>
+        <div class="mt-1.5 text-[10px] text-slate-500" id="hud-status">iniciando…</div>
+      </div>
+    </div>
+
+    <!-- Diagrama de red -->
+    <div class="glass edge-glow flex flex-col p-4">
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <svg viewBox="0 0 24 24" class="h-4 w-4 text-cyan-glow-400" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M11 7 6 16M13 7l5 9M7 18h10"/></svg>
+          <h2 class="text-sm font-bold text-slate-100">Arquitectura y flujo de senal</h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="epoch-counter" class="tnum rounded-md border border-slate-700/60 bg-abyss-950/70 px-2.5 py-1 text-[11px] text-cyan-glow-300">Epoca 0 · Paso 0/6</span>
+          <button id="btn-clear-sel" hidden class="btn btn-ghost !px-2 !py-1 !text-[10px]" type="button">Quitar seleccion</button>
+        </div>
+      </div>
+
+      <div class="relative h-[340px] overflow-hidden rounded-xl border border-slate-700/50 bg-abyss-950/70">
+        <svg id="net-svg" class="h-full w-full" viewBox="0 0 760 340" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Diagrama de la red neuronal multicapa">
+          <defs>
+            <filter id="glow-cyan" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="4" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="glow-ember" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="4" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <marker id="arrow-cyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="#22d3ee"/>
+            </marker>
+            <marker id="arrow-ember" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="#f97316"/>
+            </marker>
+          </defs>
+          <g id="svg-edges"></g>
+          <g id="svg-nodes"></g>
+        </svg>
+
+        <div id="net-hint" class="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-2 text-[10px] text-slate-500">
+          Pasa el cursor por cualquier neurona o conexion para ver sus valores · clic para fijar
+        </div>
+      </div>
+
+      <!-- Leyenda -->
+      <div class="mt-3 grid grid-cols-1 gap-2 text-[11px] sm:grid-cols-3">
+        <div class="flex items-center gap-2 rounded-lg border border-cyan-glow-500/25 bg-cyan-glow-900/25 px-2.5 py-1.5 text-cyan-glow-300">
+          <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16m-5-5 5 5-5 5"/></svg>
+          <span>Forward pass · <span class="font-mono">z, a</span></span>
+        </div>
+        <div class="flex items-center gap-2 rounded-lg border border-ember-600/25 bg-ember-900/25 px-2.5 py-1.5 text-ember-300">
+          <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4m5 5-5-5 5-5"/></svg>
+          <span>Backpropagation · <span class="font-mono">delta</span></span>
+        </div>
+        <div class="flex items-center gap-2 rounded-lg border border-cyan-glow-400/25 bg-cyan-glow-900/40 px-2.5 py-1.5 text-cyan-glow-300">
+          <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg>
+          <span>Gradiente y peso nuevo</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel de detalle de neurona -->
+    <div id="node-detail" hidden class="glass rounded-2xl p-4"></div>
+
+    <!-- Inspectores -->
+    <div class="glass flex flex-col p-4">
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/40 pb-2">
+        <div class="flex gap-1.5" role="tablist">
+          <button class="tab-btn" role="tab" data-tab="matrices" data-active="true" type="button">Matrices W, B</button>
+          <button class="tab-btn" role="tab" data-tab="chart" data-active="false" type="button">Curva de perdida</button>
+          <button class="tab-btn" role="tab" data-tab="gradients" data-active="false" type="button">Gradientes</button>
+        </div>
+        <span class="font-mono text-[10px] text-slate-500">valores en tiempo real</span>
+      </div>
+
+      <div id="tab-matrices" class="grid grid-cols-1 gap-4 md:grid-cols-2"></div>
+
+      <div id="tab-chart" hidden>
+        <div class="h-56 rounded-lg border border-slate-700/50 bg-abyss-950/60 p-2">
+          <canvas id="loss-chart"></canvas>
+        </div>
+      </div>
+
+      <div id="tab-gradients" hidden class="grid grid-cols-1 gap-4 md:grid-cols-2"></div>
+    </div>
+  </section>
+
+  <!-- ─────────── COLUMNA DERECHA ─────────── -->
+  <section class="flex flex-col gap-4 xl:col-span-5">
+    <div class="glass edge-glow flex flex-col p-5 xl:h-[calc(100vh-190px)]">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/40 pb-3">
+        <div class="flex items-center gap-2">
+          <svg viewBox="0 0 24 24" class="h-4.5 w-4.5 text-ember-400" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14M5 12h14M5 20h7"/><circle cx="17" cy="20" r="2"/></svg>
+          <h2 class="text-sm font-bold text-slate-100">Desglose matematico</h2>
+        </div>
+        <span id="step-badge" class="rounded-full border border-slate-700/60 bg-abyss-950/70 px-2.5 py-1 text-[10px] font-semibold text-slate-400">Paso 0</span>
+      </div>
+
+      <div id="math-container" class="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1.5"></div>
+
+      <div class="mt-4 border-t border-slate-700/40 pt-3">
+        <div class="rounded-lg border border-cyan-glow-500/20 bg-cyan-glow-900/25 p-3">
+          <div class="flex items-start gap-2.5">
+            <svg viewBox="0 0 24 24" class="mt-0.5 h-4 w-4 shrink-0 text-cyan-glow-400" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v2m0 14v2M5 12H3m18 0h-2M6.3 6.3 4.9 4.9m14.2 14.2-1.4-1.4M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/><circle cx="12" cy="12" r="3.5"/></svg>
+            <div>
+              <span class="mb-0.5 block text-[11px] font-bold text-cyan-glow-300">Comentario del profesor</span>
+              <div id="prof-comment" class="text-[11px] leading-relaxed text-slate-300">Cargando…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ══════════════════════════ TEORIA Y QUIZ ══════════════════════════ -->
+<section class="mx-auto w-full max-w-[1600px] px-4 pb-10">
+  <div class="glass overflow-hidden">
+    <div class="flex gap-1.5 overflow-x-auto border-b border-slate-700/40 bg-abyss-950/40 p-2" role="tablist">
+      <button class="tab-btn" role="tab" data-theory="derivation" data-active="true" type="button">
+        Demostracion: regla de la cadena
+      </button>
+      <button class="tab-btn" role="tab" data-theory="quiz" data-active="false" type="button">
+        Autoevaluacion
+      </button>
+      <button class="tab-btn" role="tab" data-theory="glossary" data-active="false" type="button">
+        Glosario y notacion
+      </button>
+    </div>
+
+    <div id="theory-derivation" class="space-y-4 p-6 text-xs leading-relaxed text-slate-300"></div>
+    <div id="theory-quiz" hidden class="space-y-4 p-6"></div>
+    <div id="theory-glossary" hidden class="space-y-4 p-6"></div>
+  </div>
+</section>
+
+<footer class="border-t border-slate-700/40 py-6 text-center text-[11px] text-slate-500">
+  Simulador didactico de Backpropagation · Proyecto academico
+  <span class="mx-2 text-slate-700">|</span>
+  Atajos: <kbd class="rounded border border-slate-700 bg-abyss-800 px-1.5 py-0.5 font-mono text-[10px] text-slate-400">←</kbd> <kbd class="rounded border border-slate-700 bg-abyss-800 px-1.5 py-0.5 font-mono text-[10px] text-slate-400">→</kbd> pasos · <kbd class="rounded border border-slate-700 bg-abyss-800 px-1.5 py-0.5 font-mono text-[10px] text-slate-400">Espacio</kbd> auto · <kbd class="rounded border border-slate-700 bg-abyss-800 px-1.5 py-0.5 font-mono text-[10px] text-slate-400">T</kbd> tour · <kbd class="rounded border border-slate-700 bg-abyss-800 px-1.5 py-0.5 font-mono text-[10px] text-slate-400">R</kbd> reiniciar
+</footer>
+
+<!-- ══════════════════════════ MODAL ══════════════════════════ -->
+<div id="modal-help" hidden class="fixed inset-0 z-[150] flex items-center justify-center p-4">
+  <div id="modal-backdrop" class="absolute inset-0 bg-abyss-950/80 backdrop-blur-sm"></div>
+  <div role="dialog" aria-modal="true" aria-labelledby="modal-title"
+       class="glass relative max-h-[88vh] w-full max-w-2xl overflow-y-auto p-6">
+    <div class="mb-4 flex items-start justify-between border-b border-slate-700/40 pb-3">
+      <h3 id="modal-title" class="flex items-center gap-2 text-sm font-bold text-white">
+        <svg viewBox="0 0 24 24" class="h-4 w-4 text-cyan-glow-400" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H19v3H6.5"/></svg>
+        Como usar el simulador
+      </h3>
+      <button id="modal-close" type="button" class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-700/30 hover:text-white" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div id="modal-body" class="space-y-4 text-xs leading-relaxed text-slate-300"></div>
+    <div class="mt-5 flex justify-end border-t border-slate-700/40 pt-3">
+      <button id="modal-action" class="btn btn-cyan" type="button">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.9.0/dist/driver.js.iife.js"></script>
+<script src="./content.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>

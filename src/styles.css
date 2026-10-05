@@ -1,0 +1,548 @@
+@import "tailwindcss";
+
+/* Config content sources: scanning the whole project so classes built
+   dynamically inside app.js strings are still detected. */
+@source "../index.html";
+@source "../src/**/*.js";
+
+/* ==========================================================================
+   PALETA COMPLEMENTARIA — CIAN  <->  NARANJA
+   Los pares cian/naranja estan a ~180 grados en la rueda cromatica.
+   Cada familia cromatica codifica una fase del algoritmo, de modo que
+   el color comunica informacion y no solo decoracion.
+   ========================================================================== */
+@theme {
+  --color-abyss-950: #05080f;
+  --color-abyss-900: #070d17;
+  --color-abyss-850: #0a1220;
+  --color-abyss-800: #0d1526;
+  --color-abyss-700: #131e33;
+  --color-abyss-600: #1b2a45;
+  --color-abyss-500: #2a3d5e;
+
+  --color-cyan-glow-300: #67e8f9;
+  --color-cyan-glow-400: #22d3ee;
+  --color-cyan-glow-500: #06b6d4;
+  --color-cyan-glow-600: #0891b2;
+  --color-cyan-glow-700: #0e7490;
+  --color-cyan-glow-900: #083344;
+
+  --color-ember-200: #fed7aa;
+  --color-ember-300: #fdba74;
+  --color-ember-400: #fb923c;
+  --color-ember-500: #f97316;
+  --color-ember-600: #ea580c;
+  --color-ember-700: #c2410c;
+  --color-ember-900: #431407;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;
+
+  --animate-drift: drift 26s ease-in-out infinite;
+  --animate-drift-slow: drift 40s ease-in-out infinite reverse;
+  --animate-pulse-ring: pulse-ring 2.4s ease-out infinite;
+  --animate-sheen: sheen 2.2s linear infinite;
+  --animate-rise: rise 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-flow-forward: flow-forward 1.1s linear infinite;
+  --animate-flow-backprop: flow-backprop 1.1s linear infinite;
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(6%, -5%, 0) scale(1.12); }
+  66%      { transform: translate3d(-4%, 6%, 0) scale(0.94); }
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(0.85); opacity: 0.75; }
+  70%  { transform: scale(1.7); opacity: 0; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+@keyframes sheen {
+  0%   { background-position: -220% 0; }
+  100% { background-position: 220% 0; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes flow-forward {
+  to { stroke-dashoffset: -22; }
+}
+
+@keyframes flow-backprop {
+  to { stroke-dashoffset: 22; }
+}
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+@layer base {
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--color-abyss-950);
+    color: #e2e8f0;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: rgba(6, 182, 212, 0.32); }
+
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-abyss-600);
+    border-radius: 99px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-cyan-glow-700); background-clip: content-box; }
+
+  :focus-visible {
+    outline: 2px solid var(--color-cyan-glow-400);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Los sliders nativos con acento cian */
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 5px;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--color-cyan-glow-600), var(--color-cyan-glow-400));
+    opacity: 0.55;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -6px;
+    height: 17px;
+    width: 17px;
+    border-radius: 99px;
+    background: var(--color-abyss-800);
+    border: 2px solid var(--color-cyan-glow-400);
+    box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.14);
+    transition: box-shadow 0.18s ease, transform 0.18s ease;
+  }
+  input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.12); box-shadow: 0 0 0 7px rgba(34, 211, 238, 0.2); }
+  input[type="range"]::-moz-range-track { height: 5px; border-radius: 99px; background: var(--color-cyan-glow-600); }
+  input[type="range"]::-moz-range-thumb {
+    height: 15px; width: 15px; border-radius: 99px;
+    background: var(--color-abyss-800); border: 2px solid var(--color-cyan-glow-400);
+  }
+
+  /* Select oscuro consistente */
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8.5 2 4.5h8z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.55rem center;
+    background-size: 0.7rem;
+    -webkit-appearance: none;
+    appearance: none;
+    padding-right: 1.6rem;
+  }
+  select option { background: var(--color-abyss-800); color: #e2e8f0; }
+}
+
+/* ==========================================================================
+   COMPONENTES
+   ========================================================================== */
+
+/* Fondo aurora: dos blobs complementarios en deriva lenta */
+.aurora::before,
+.aurora::after {
+  content: "";
+  position: fixed;
+  z-index: -2;
+  width: 46rem;
+  height: 46rem;
+  border-radius: 50%;
+  filter: blur(96px);
+  pointer-events: none;
+  will-change: transform;
+}
+.aurora::before {
+  top: -16rem;
+  left: -12rem;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.3), transparent 68%);
+  animation: var(--animate-drift);
+}
+.aurora::after {
+  bottom: -20rem;
+  right: -14rem;
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.24), transparent 68%);
+  animation: var(--animate-drift-slow);
+}
+
+/* Rejilla tecnica sutil sobre el fondo */
+.aurora-grid {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+
+/* Panel glassmorphism */
+.glass {
+  position: relative;
+  background: linear-gradient(160deg, rgba(19, 30, 51, 0.82), rgba(10, 18, 32, 0.72));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  border-radius: 1.15rem;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.05) inset,
+    0 18px 45px -22px rgba(0, 0, 0, 0.9);
+}
+
+/* Filo superior con gradiente complementario en las tarjetas destacadas */
+.edge-glow::before {
+  content: "";
+  position: absolute;
+  inset-inline: 1.25rem;
+  top: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-cyan-glow-400), var(--color-ember-500), transparent);
+  opacity: 0.85;
+}
+
+/* Botones */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: transform 0.14s ease, background-color 0.18s ease,
+              border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.btn:active { transform: translateY(1px) scale(0.985); }
+.btn:disabled { opacity: 0.38; cursor: not-allowed; transform: none; }
+
+.btn-cyan {
+  background: linear-gradient(135deg, var(--color-cyan-glow-600), var(--color-cyan-glow-500));
+  color: #04121a;
+  box-shadow: 0 6px 20px -8px rgba(6, 182, 212, 0.75);
+}
+.btn-cyan:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--color-cyan-glow-500), var(--color-cyan-glow-400));
+  box-shadow: 0 10px 28px -8px rgba(34, 211, 238, 0.85);
+  transform: translateY(-1px);
+}
+
+.btn-ember {
+  background: linear-gradient(135deg, var(--color-ember-600), var(--color-ember-500));
+  color: #1a0a03;
+  box-shadow: 0 6px 20px -8px rgba(249, 115, 22, 0.7);
+}
+.btn-ember:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--color-ember-500), var(--color-ember-400));
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: rgba(148, 163, 184, 0.09);
+  border-color: rgba(148, 163, 184, 0.17);
+  color: #cbd5e1;
+}
+.btn-ghost:hover:not(:disabled) { background: rgba(148, 163, 184, 0.17); color: #f1f5f9; }
+
+/* Halo de ripple al pulsar */
+.btn .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  transform: translate(-50%, -50%);
+  animation: ripple-out 0.55s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes ripple-out {
+  to { width: 340px; height: 340px; opacity: 0; }
+}
+
+/* Badges de fase */
+.phase-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(10, 18, 32, 0.6);
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.phase-pill[data-active="true"] {
+  border-color: currentColor;
+  background: rgba(19, 30, 51, 0.95);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px -10px currentColor;
+}
+.phase-pill[data-done="true"]:not([data-active="true"]) { opacity: 0.85; border-color: rgba(103, 232, 249, 0.3); }
+
+/* Campos de formulario */
+.field {
+  background: rgba(5, 8, 15, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.17);
+  border-radius: 0.55rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.72rem;
+  color: #e2e8f0;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  width: 100%;
+}
+.field:hover { border-color: rgba(103, 232, 249, 0.35); }
+.field:focus {
+  outline: none;
+  border-color: var(--color-cyan-glow-400);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.16);
+  background: rgba(5, 8, 15, 0.95);
+}
+
+/* Celda de matriz con pulso al Actualizarse */
+.matrix-cell {
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  position: relative;
+  border-radius: 0.4rem;
+}
+.matrix-cell[data-flash="up"]   { background-color: rgba(34, 211, 238, 0.28); box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.6); }
+.matrix-cell[data-flash="down"] { background-color: rgba(249, 115, 22, 0.28); box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.6); }
+
+/* Tarjeta de bloque matematico */
+.math-card {
+  border-radius: 0.8rem;
+  padding: 0.85rem 1rem;
+  background: rgba(5, 8, 15, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.11);
+  border-left-width: 3px;
+  animation: var(--animate-rise);
+}
+.math-card-cyan  { border-left-color: var(--color-cyan-glow-400); }
+.math-card-ember { border-left-color: var(--color-ember-500); }
+.math-card-rose  { border-left-color: #fb7185; }
+.math-card-violet{ border-left-color: #a78bfa; }
+
+.eq {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  line-height: 1.75;
+  overflow-x: auto;
+  color: #cbd5e1;
+}
+
+/* Tooltip propio */
+.tt {
+  position: fixed;
+  z-index: 200;
+  max-width: 20rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.7rem;
+  background: rgba(5, 8, 15, 0.97);
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  box-shadow: 0 20px 45px -18px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  font-size: 0.7rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px) scale(0.97);
+  transition: opacity 0.14s ease, transform 0.14s ease;
+}
+.tt[data-show="true"] { opacity: 1; transform: translateY(0) scale(1); }
+.tt-title {
+  font-weight: 700;
+  color: #f1f5f9;
+  font-size: 0.72rem;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.tt-row { display: flex; justify-content: space-between; gap: 1rem; font-family: var(--font-mono); font-size: 0.66rem; }
+.tt-row dt { color: #94a3b8; }
+.tt-row dd { color: var(--color-cyan-glow-300); font-weight: 600; }
+.tt-note { margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px solid rgba(148, 163, 184, 0.16); color: #94a3b8; font-size: 0.66rem; }
+
+/* Nodo SVG */
+.node-hit { cursor: pointer; }
+.node-body {
+  transition: fill 0.3s ease, stroke 0.3s ease, stroke-width 0.3s ease, r 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.node-g {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.node-g[data-active="true"] { transform: scale(1.1); }
+.node-g[data-selected="true"] .node-body { stroke-width: 3.5; }
+
+/* Conexion SVG */
+.edge {
+  fill: none;
+  stroke-linecap: round;
+  transition: stroke 0.35s ease, stroke-width 0.35s ease, opacity 0.35s ease;
+}
+.edge-flow { fill: none; stroke-linecap: round; stroke-dasharray: 7 15; }
+.edge-dim { opacity: 0.14; transition: opacity 0.3s ease; }
+.edge-lit { opacity: 1; }
+
+/* Etiqueta flotante de valor en SVG */
+.edge-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: rgba(5, 8, 15, 0.92);
+  stroke-width: 3.4px;
+  stroke-linejoin: round;
+  transition: fill 0.3s ease, opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* Cifras animadas */
+.tnum { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+
+/* Barra metrica */
+.meter {
+  height: 5px;
+  border-radius: 99px;
+  background: rgba(148, 163, 184, 0.14);
+  overflow: hidden;
+}
+.meter > span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.4s ease;
+}
+
+/* KaTeX: fondo compatible con el tema oscuro */
+/* El bloque matematico arranca en 0.7rem, asi que sin este factor los
+   subindices de KaTeX bajan de 8px y quedan ilegibles al proyectar. */
+.katex { font-size: 1.18em; color: #e2e8f0; }
+.katex-display { font-size: 1.1em; }
+.katex-display { overflow-x: auto; overflow-y: hidden; padding: 0.35rem 0; }
+
+/* Pestanas */
+.tab-btn {
+  position: relative;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 0.55rem;
+  color: #94a3b8;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tab-btn:hover { color: #e2e8f0; background: rgba(148, 163, 184, 0.09); }
+.tab-btn[data-active="true"] {
+  color: #04121a;
+  background: linear-gradient(135deg, var(--color-cyan-glow-500), var(--color-cyan-glow-400));
+  box-shadow: 0 6px 18px -8px rgba(6, 182, 212, 0.8);
+}
+
+/* Botones del quiz */
+.quiz-opt {
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.55rem;
+  font-size: 0.72rem;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  color: #cbd5e1;
+  transition: all 0.18s ease;
+  cursor: pointer;
+}
+.quiz-opt:hover:not(:disabled) { background: rgba(148, 163, 184, 0.16); transform: translateX(3px); border-color: rgba(103, 232, 249, 0.4); }
+.quiz-opt[data-state="correct"] { background: rgba(34, 211, 238, 0.16); border-color: var(--color-cyan-glow-400); color: var(--color-cyan-glow-300); }
+.quiz-opt[data-state="wrong"]   { background: rgba(249, 115, 22, 0.16); border-color: var(--color-ember-500); color: var(--color-ember-300); }
+.quiz-opt:disabled { cursor: default; }
+
+/* Skeleton shimmer para KaTeX cargando */
+.sheen {
+  background: linear-gradient(90deg, rgba(148,163,184,0.07) 25%, rgba(148,163,184,0.17) 37%, rgba(148,163,184,0.07) 63%);
+  background-size: 220% 100%;
+  animation: var(--animate-sheen);
+}
+
+/* --------------------------------------------------------------------------
+   TOUR GUIADO (driver.js) — re-tematizado con la paleta cian/naranja
+   -------------------------------------------------------------------------- */
+.driver-popover {
+  background: rgba(10, 18, 32, 0.97) !important;
+  border: 1px solid rgba(34, 211, 238, 0.32) !important;
+  border-radius: 0.95rem !important;
+  box-shadow: 0 28px 60px -22px rgba(0, 0, 0, 0.95) !important;
+  backdrop-filter: blur(14px);
+  padding: 1.05rem 1.15rem !important;
+  color: #cbd5e1 !important;
+  font-family: var(--font-sans) !important;
+  max-width: 22rem !important;
+}
+.driver-popover .driver-popover-title {
+  color: #f1f5f9 !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+}
+.driver-popover .driver-popover-description {
+  color: #94a3b8 !important;
+  font-size: 0.78rem !important;
+  line-height: 1.62 !important;
+  margin-top: 0.4rem !important;
+}
+.driver-popover .driver-popover-footer button {
+  background: linear-gradient(135deg, var(--color-cyan-glow-600), var(--color-cyan-glow-500)) !important;
+  color: #04121a !important;
+  border-radius: 0.6rem !important;
+  font-size: 0.74rem !important;
+  font-weight: 600 !important;
+  padding: 0.42rem 0.9rem !important;
+  border: none !important;
+  cursor: pointer;
+}
+.driver-popover .driver-popover-footer button:hover { filter: brightness(1.12); }
+.driver-popover .driver-popover-progress-text {
+  color: var(--color-cyan-glow-400) !important;
+  font-size: 0.72rem !important;
+  font-family: var(--font-mono) !important;
+}
+.driver-popover .driver-popover-nav-btns button { box-shadow: none !important; }
+.driver-active .driver-popover-close-btn { color: #64748b !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Ocultar elementos con [hidden] incluso si el flujo los muestra */
+[hidden] { display: none !important; }

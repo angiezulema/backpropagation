@@ -1,0 +1,16 @@
+{
+  "name": "backpropagation-simulator",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Simulador didactico e interactivo de Backpropagation en un Perceptron Multicapa (MLP)",
+  "scripts": {
+    "dev": "tailwindcss -i ./src/styles.css -o ./dist/app.css --watch",
+    "build": "tailwindcss -i ./src/styles.css -o ./dist/app.css --minify && node scripts/copy-static.js",
+    "preview": "npx --yes serve dist -l 4173"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.3",
+    "puppeteer": "^25.12.0",
+    "tailwindcss": "4.3.3"
+  }
+}
